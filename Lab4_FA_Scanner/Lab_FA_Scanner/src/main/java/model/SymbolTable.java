@@ -7,7 +7,6 @@ public class SymbolTable {
     private Integer size;
     private HashTable<String> identifiers;
     private HashTable<String> constants;
-//make one hashtable for constants or just one hashtable for all
     public SymbolTable(Integer size) {
         this.size = size;
         this.identifiers=new HashTable<>(size);

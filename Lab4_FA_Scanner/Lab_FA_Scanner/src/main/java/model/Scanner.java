@@ -22,6 +22,9 @@ public class Scanner {
 
     private Integer currentLine = 1;
 
+    private final FA integerFA = new FA("file_integer.in.txt");
+    private final FA identifierFA=new FA("file_identifier.in.txt");
+
     public Scanner() {
         try {
             readTokens();
@@ -54,7 +57,7 @@ public class Scanner {
                 nextToken();
             }
 
-            FileWriter fileWriter = new FileWriter("PIF" + programFileName.replace(".txt", ".out"));
+            FileWriter fileWriter = new FileWriter("PIF" + programFileName.replace(".txt", ".out.txt"));
             for (var pair : pif) {
                 String formattedString = String.format("%-15s -> (%-3d, %-3d)\n",
                         pair.getFirst(),
@@ -64,7 +67,7 @@ public class Scanner {
             }
 
             fileWriter.close();
-            fileWriter = new FileWriter("ST" + programFileName.replace(".txt", ".out"));
+            fileWriter = new FileWriter("ST" + programFileName.replace(".txt", ".out.txt"));
             fileWriter.write(symbolTable.toString());
             fileWriter.close();
             System.out.println("Lexically correct");
@@ -102,15 +105,23 @@ public class Scanner {
     }
 
     private boolean treatIdentifier() throws Exception {
-        if (!Character.isLetter(program.charAt(index)) && !(program.charAt(index)=='_' )) {
-            return false;
-        }
 
         int start = index;
-        index++;
+        StringBuilder identifierCandidate = new StringBuilder();
 
-        while (index < program.length() && (Character.isLetterOrDigit(program.charAt(index)))) {
+        while (index < program.length() && !isSpaceOrNextToken()) {
+            identifierCandidate.append(program.charAt(index));
             index++;
+        }
+
+        if (identifierCandidate.length() == 0) {
+            return false; // No identifier found
+        }
+
+        String identifierString = identifierCandidate.toString();
+        if (!identifierFA.checkAccepted(identifierString)) {
+            index=start;
+            return false;
         }
 
         String identifier = program.substring(start, index);
@@ -159,23 +170,26 @@ public class Scanner {
 
     private boolean treatIntConstant() throws Exception {
         int start = index;
-        if (index < program.length() && program.charAt(index) == '-' &&
-                (index + 1) < program.length() && Character.isDigit(program.charAt(index + 1))) {
+        StringBuilder intCandidate = new StringBuilder();
+
+        if(program.charAt(index)=='-') {
+            intCandidate.append(program.charAt(index));
             index++;
         }
 
-        if (!Character.isDigit(program.charAt(index))) {
+        while (index < program.length() && !isSpaceOrNextToken()) {
+            intCandidate.append(program.charAt(index));
+            index++;
+        }
+
+        if (intCandidate.length() == 0) {
+            return false; // No integer found
+        }
+
+        String intConstantString = intCandidate.toString();
+        if (!integerFA.checkAccepted(intConstantString)) {
+            index=start;
             return false;
-        }
-
-        index++;
-
-        while (index < program.length() && Character.isDigit(program.charAt(index))) {
-            index++;
-        }
-
-        if (index < program.length() && Character.isLetter(program.charAt(index))) {
-            throw new ScannerException("Lexical error: invalid identifier at line " + currentLine + ", index " + start);
         }
 
         String intConstant = program.substring(start , index);
@@ -189,6 +203,19 @@ public class Scanner {
         pif.add(new Pair<>("constant", sTPosition));
 
         return true;
+    }
+
+    private boolean isSpaceOrNextToken() {
+        if (Character.isWhitespace(program.charAt(index))) {
+            return true;
+        }
+
+        for (String token : tokens) {
+            if (program.startsWith(token, index)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean treatFromTokenList() {
