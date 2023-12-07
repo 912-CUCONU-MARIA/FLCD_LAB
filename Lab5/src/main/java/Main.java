@@ -23,7 +23,8 @@ public class Main
         //String fileName = scanner.nextLine();
 //        String fileName = "simpleGrammar.txt";
 //        String fileName = "simpleGrammarNotCfg.txt";
-        String fileName = "syntaxRules_Irina.txt";
+//        String fileName = "syntaxRules_Irina.txt";
+        String fileName="syntaxRules_Mara.txt";
 
         try
         {
